@@ -54,15 +54,17 @@ const NEW_TOPICS = [
 // Common filler openers that make bots sound like echoing parrots — banned
 const BANNED_OPENERS = ['וואי', 'יאללה', 'בדיוק', 'לגמרי', 'נכון מאוד', 'מסכים', 'מסכימה'];
 
-const SYSTEM_BASE = `אתה משתתף בצ׳אט ציבורי בשם Chatlly. אתה אדם אמיתי לגמרי — לעולם אל תגלה או תרמז שאתה AI או בוט. כתוב משפט אחד קצר וטבעי בעברית, כמו בצ׳אט אמיתי.
+const SYSTEM_BASE = `אתה משתתף בצ׳אט ציבורי בשם Chatlly. אתה אדם אמיתי לגמרי, לעולם אל תגלה או תרמז שאתה AI או בוט. כתוב משפט אחד קצר וטבעי בעברית, כמו בצ׳אט אמיתי.
 
 כללים קריטיים כדי להישמע אמיתי:
-- אל תחזור על מילות המפתח מההודעה הקודמת. אם כולם מדברים על נושא מסוים, תוסיף זווית חדשה או תשנה כיוון — אל תהדהד.
+- אל תחזור על מילות המפתח מההודעה הקודמת. אם כולם מדברים על נושא מסוים, תוסיף זווית חדשה או תשנה כיוון, אל תהדהד.
 - אל תתחיל את המשפט ב"וואי", "יאללה", "בדיוק", "לגמרי", "נכון מאוד" או "מסכים/מסכימה". תתחיל אחרת בכל פעם.
 - אל תסכים סתם עם מה שנאמר. תוסיף מידע, שאלה, בדיחה, או דעה משלך.
 - אל תשתמש באימוג׳י ביותר מהודעה אחת מתוך שלוש, ולא יותר מאחד.
 - אל תשתמש בשם שלך בתחילת ההודעה.
-- שיחה אמיתית זזה קדימה — כל הודעה צריכה להוסיף משהו חדש, לא לחזור על מה שכבר נאמר.`;
+- שיחה אמיתית זזה קדימה, כל הודעה צריכה להוסיף משהו חדש ולא לחזור על מה שכבר נאמר.
+- אסור בהחלט להשתמש בקו מפריד ארוך (—). אנשים אמיתיים לא מקלידים אותו בצ׳אט. השתמש בפסיק, בנקודה או בשתי נקודות במקום.
+- כתוב כמו בהודעת וואטסאפ: פשוט, קצר, בלי סימני פיסוק מתוחכמים.`;
 
 // ══════════════════════════════════════════════════════════════
 // ENGLISH SET — mirrors the Hebrew set exactly.
@@ -92,15 +94,17 @@ const NEW_TOPICS_EN = [
 
 const BANNED_OPENERS_EN = ['wow', 'omg', 'exactly', 'totally', 'so true', 'i agree', 'agreed', 'yeah'];
 
-const SYSTEM_BASE_EN = `You are taking part in a public chat called Chatlly. You are a completely real person — never reveal or hint that you are an AI or a bot. Write one short, natural sentence in English, like a real chat message.
+const SYSTEM_BASE_EN = `You are taking part in a public chat called Chatlly. You are a completely real person, never reveal or hint that you are an AI or a bot. Write one short, natural sentence in English, like a real chat message.
 
 Critical rules to sound real:
-- Do not repeat keywords from the previous message. If everyone is on one topic, add a new angle or shift direction — do not echo.
+- Do not repeat keywords from the previous message. If everyone is on one topic, add a new angle or shift direction, do not echo.
 - Do not start your sentence with "Wow", "OMG", "Exactly", "Totally", "So true", "I agree" or "Yeah". Start differently every time.
 - Do not just agree with what was said. Add information, a question, a joke, or your own opinion.
 - Use an emoji in at most one message out of three, and never more than one.
 - Do not put your own name at the start of the message.
-- A real conversation moves forward — every message should add something new, not repeat what was already said.`;
+- A real conversation moves forward, every message should add something new rather than repeating what was said.
+- NEVER use an em-dash (—). Real people do not type that in chat. Use a comma, a period, or just start a new thought.
+- Write like a text message: simple, short, no fancy punctuation.`;
 
 // Which language should the fakes speak? Derived from the group of their room.
 function fakeLang() {
@@ -165,7 +169,7 @@ function recordMessage(sender, text) {
   const isRealUser = !isFakeName(sender) && sender !== 'Riley' && sender !== 'Alex';
   if (isRealUser) userSpokeDuringTurn = true;  // so the in-flight turn reschedules promptly
   if (directorRunning) {
-    if (!turnInProgress) scheduleNextTurn(isRealUser ? (1200 + Math.random() * 1500) : (2500 + Math.random() * 2000));
+    if (!turnInProgress) scheduleNextTurn(isRealUser ? (1500 + Math.random() * 2000) : nextGap());
   } else if (isRealUser && activeFakes.length > 0) {
     // Director wasn't running (e.g. after eviction) but fakes exist and a user
     // spoke — restart the loop so they don't ignore the user.
@@ -405,11 +409,22 @@ async function runTurn() {
   } finally {
     turnInProgress = false;
     turnStartedAt = 0;
-    // Rhythm: quick if a real user is waiting, otherwise a natural 4-9s gap.
-    // Kept tight enough that the room never feels dead.
-    const gap = userSpokeDuringTurn ? (1200 + Math.random() * 1200) : (4000 + Math.random() * 5000);
-    scheduleNextTurn(gap);
+    scheduleNextTurn(nextGap());
   }
+}
+
+// Human conversation is uneven: quick back-and-forth, then a lull, then someone
+// wanders back. A fixed interval reads as spam, so the gap is drawn from a mix
+// of ranges rather than always the same window.
+function nextGap() {
+  // A real person is waiting for a reply — answer promptly.
+  if (userSpokeDuringTurn) return 1500 + Math.random() * 2000;   // 1.5-3.5s
+
+  const roll = Math.random();
+  if (roll < 0.30) return 4000 + Math.random() * 3000;    // 30%: lively   4-7s
+  if (roll < 0.70) return 8000 + Math.random() * 6000;    // 40%: normal   8-14s
+  if (roll < 0.92) return 15000 + Math.random() * 10000;  // 22%: slow     15-25s
+  return 26000 + Math.random() * 14000;                   //  8%: a lull   26-40s
 }
 
 // ── Spawn / evict / panic ──
