@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken');
 const db = require('./db');
 const { loginUser } = require('./auth');
 const { kickUser, banUser, unbanUser, makeAdmin } = require('./admin');
-const { handleUserMessage, startBotTimer, stopBotTimer, setBotOffline, emitBotStatus, recordUserMessage } = require('./bots');
+const { handleUserMessage, startBotTimer, stopBotTimer, setBotOffline, emitBotStatus, recordUserMessage, getBotRoom, setBotRoom } = require('./bots');
 const { getConfig, setConfig } = require('./config');
 const fakeHumans = require('./fakehumans');
 const roomsModule = require('./rooms');
@@ -92,8 +92,11 @@ const connectedUsers = new Map();
 
 // Bots (Riley/Alex/fakes) only operate in the main room. This wrapper makes their
 // io.emit() calls broadcast to the main room only, without changing bot code.
+// Riley & Alex emit into whichever room they are currently visiting.
+// This is resolved at call time (not fixed to main), so when Riley roams into
+// another room her replies land there instead of back in the main room.
 const botIO = {
-  emit: (event, data) => io.to(roomsModule.MAIN_ROOM).emit(event, data),
+  emit: (event, data) => io.to(getBotRoom() || roomsModule.MAIN_ROOM).emit(event, data),
   to: (target) => io.to(target),
 };
 
@@ -389,8 +392,11 @@ io.on('connection', (socket) => {
       fakeHumans.recordMessage(msg.sender, msg.text);
     }
 
-    // Riley + Alex operate in the main room only
-    if (room === roomsModule.MAIN_ROOM) {
+    // Riley + Alex: they respond in whichever room they are currently visiting.
+    // Previously this was locked to the main room, so when Riley roamed into
+    // another room she would talk but never react to anything the user said.
+    const rileyRoom = getBotRoom ? getBotRoom() : roomsModule.MAIN_ROOM;
+    if (room === rileyRoom) {
       recordUserMessage(msg.sender, msg.text);
       if (getConfig().warmupBots) {
         handleUserMessage(botIO, connectedUsers, { type: 'message', username: socket.user.username, role: socket.user.role, text: text.trim() });
@@ -409,6 +415,18 @@ io.on('connection', (socket) => {
 
     socket.leave(oldRoom);
     io.to(oldRoom).emit('userLeft', { username: socket.user.username });
+
+    // If Riley was visiting the room the user just left and nobody else is
+    // there, send her back to the main room so she isn't stranded talking to
+    // an empty room.
+    if (getBotRoom() === oldRoom && oldRoom !== roomsModule.MAIN_ROOM) {
+      const stillThere = [...connectedUsers.values()]
+        .some(u => u.username !== socket.user.username && (u.room || 'main') === oldRoom);
+      if (!stillThere) {
+        setBotRoom(roomsModule.MAIN_ROOM);
+        warmedRooms.delete(oldRoom);
+      }
+    }
 
     socket.join(roomId);
     socket.currentRoom = roomId;
@@ -740,6 +758,10 @@ function maybeWarmRoom(roomId) {
   if (usersInRoom.length !== 1) return;        // only warm when exactly 1 lonely user
   if (warmedRooms.has(roomId)) return;         // don't double-warm
   warmedRooms.add(roomId);
+
+  // Riley is now visiting this room — record it so user messages here reach her.
+  // Without this she would greet the room but ignore everything the user says.
+  setBotRoom(roomId);
 
   const roomIO = {
     emit: (event, data) => io.to(roomId).emit(event, data),
