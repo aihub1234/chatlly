@@ -186,6 +186,32 @@ function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ── Director: decide who speaks next ──
 // Returns the fake persona who should speak, or null.
+// How many of the last N messages a single bot may own before being benched.
+const RECENT_WINDOW = 6;
+const MAX_SHARE_IN_WINDOW = 2;
+
+// Bots that have dominated the recent conversation are temporarily excluded so
+// one persona can never machine-gun the room, no matter which rule selected it.
+function notHogging(list) {
+  if (list.length <= 1) return list;
+  const recent = roomHistory.slice(-RECENT_WINDOW).map(m => m.sender);
+  const eligible = list.filter(f => {
+    const times = recent.filter(n => n === f.name).length;
+    return times < MAX_SHARE_IN_WINDOW;
+  });
+  return eligible.length ? eligible : list;
+}
+
+// Prefer whoever has been quiet longest, so turns rotate naturally.
+function quietestFirst(list) {
+  const recent = roomHistory.slice(-10).map(m => m.sender);
+  return [...list].sort((a, b) => {
+    const ai = recent.lastIndexOf(a.name);
+    const bi = recent.lastIndexOf(b.name);
+    return ai - bi;   // never-spoke (-1) comes first
+  });
+}
+
 function pickNextSpeaker() {
   if (activeFakes.length === 0) return null;
 
@@ -207,15 +233,25 @@ function pickNextSpeaker() {
   });
 
   // Case A: someone spoke TO a specific bot by name → that bot answers.
-  if (addressedBot) return addressedBot;
+  // This holds even if they just spoke: in a real room, if someone calls your
+  // name you reply, full stop. The only limit is the anti-flood cap below, so
+  // being addressed can never turn into one persona monopolising the room.
+  if (addressedBot) {
+    const recent = roomHistory.slice(-RECENT_WINDOW).map(m => m.sender);
+    if (recent.filter(n => n === addressedBot.name).length < MAX_SHARE_IN_WINDOW) {
+      return addressedBot;
+    }
+  }
 
   // Case B: a REAL USER just spoke without naming anyone. ~60% of the time a bot
   // peels off to engage them directly (so the user never feels ignored), the rest
   // of the time the bots' own conversation continues naturally.
   if (lastWasRealUser && Math.random() < 0.6) {
     const pool = activeFakes.filter(f => f.name !== lastSpeaker);
-    const speakers = pool.length ? pool : activeFakes;
-    return speakers[Math.floor(Math.random() * speakers.length)];
+    const fair = quietestFirst(notHogging(pool.length ? pool : activeFakes));
+    // Pick from the quieter half so the same voice doesn't always answer
+    const half = Math.max(1, Math.ceil(fair.length / 2));
+    return fair[Math.floor(Math.random() * half)];
   }
 
   // Case C: the last message was a REPLY to something a bot said earlier.
@@ -224,12 +260,15 @@ function pickNextSpeaker() {
   const prev = [...roomHistory].slice(0, -1).reverse().find(m => m.sender !== lastMsg.sender);
   if (prev && isFakeName(prev.sender) && prev.sender !== lastSpeaker) {
     const originator = activeFakes.find(f => f.name === prev.sender);
-    if (originator && Math.random() < 0.55) return originator;
+    if (originator && originator.name !== lastSpeaker && Math.random() < 0.55) {
+      const rec = roomHistory.slice(-RECENT_WINDOW).map(m => m.sender);
+      if (rec.filter(n => n === originator.name).length < MAX_SHARE_IN_WINDOW) return originator;
+    }
   }
 
   // Case D: don't let the same bot speak twice in a row (but always return someone)
   const pool = activeFakes.filter(f => f.name !== lastSpeaker);
-  const speakers = pool.length ? pool : activeFakes;
+  const speakers = quietestFirst(notHogging(pool.length ? pool : activeFakes));
 
   // Case E: if truly stuck and not recently steered, a steerer moves things along
   if ((topicMessageCount >= 9 || isTopicStuck()) && turnsSinceSteer >= 6) {
@@ -237,7 +276,9 @@ function pickNextSpeaker() {
     if (steerer) return steerer;
   }
 
-  return speakers[Math.floor(Math.random() * speakers.length)];
+  // Bias toward the quieter half of the room so turns rotate
+  const half = Math.max(1, Math.ceil(speakers.length / 2));
+  return speakers[Math.floor(Math.random() * half)];
 }
 
 // ── Generate one bot's reply ──
@@ -320,6 +361,7 @@ async function generateReply(fake, mode) {
     }), API_TIMEOUT_MS);
     let reply = response.choices[0]?.message?.content?.trim() || '';
     reply = stripBannedOpener(reply);
+    reply = deAiPunctuation(reply);
     return reply;
   } catch (err) {
     console.error('[FakeHuman API error]', err.message);
@@ -328,6 +370,18 @@ async function generateReply(fake, mode) {
 }
 
 // Safety net: strip echo-y openers ("וואי", "בדיוק", "לגמרי"...) that make bots sound like parrots
+// Safety net: models love em-dashes and they read as obviously AI-written.
+// Replace any that slip past the prompt with natural chat punctuation.
+function deAiPunctuation(text) {
+  if (!text) return text;
+  return text
+    .replace(/\s*[—–]\s*/g, ', ')   // em/en dash -> comma
+    .replace(/\s*,\s*,\s*/g, ', ')  // collapse doubles
+    .replace(/,\s*([.!?])/g, '$1')   // ", ." -> "."
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 function stripBannedOpener(text) {
   if (!text) return text;
   let t = text;
@@ -413,18 +467,17 @@ async function runTurn() {
   }
 }
 
-// Human conversation is uneven: quick back-and-forth, then a lull, then someone
-// wanders back. A fixed interval reads as spam, so the gap is drawn from a mix
-// of ranges rather than always the same window.
+// Human conversation is uneven and mostly slow. A message every few seconds
+// reads as spam, so most turns sit in the 15-40s range with occasional bursts.
 function nextGap() {
   // A real person is waiting for a reply — answer promptly.
-  if (userSpokeDuringTurn) return 1500 + Math.random() * 2000;   // 1.5-3.5s
+  if (userSpokeDuringTurn) return 2000 + Math.random() * 2500;   // 2-4.5s
 
   const roll = Math.random();
-  if (roll < 0.30) return 4000 + Math.random() * 3000;    // 30%: lively   4-7s
-  if (roll < 0.70) return 8000 + Math.random() * 6000;    // 40%: normal   8-14s
-  if (roll < 0.92) return 15000 + Math.random() * 10000;  // 22%: slow     15-25s
-  return 26000 + Math.random() * 14000;                   //  8%: a lull   26-40s
+  if (roll < 0.20) return 8000 + Math.random() * 6000;    // 20%: quick exchange 8-14s
+  if (roll < 0.60) return 15000 + Math.random() * 10000;  // 40%: normal        15-25s
+  if (roll < 0.88) return 25000 + Math.random() * 15000;  // 28%: slow          25-40s
+  return 45000 + Math.random() * 30000;                   // 12%: real lull     45-75s
 }
 
 // ── Spawn / evict / panic ──
