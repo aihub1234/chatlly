@@ -40,6 +40,12 @@ let botsStatus = { riley: 'online', alex: 'online' };
 let botBusy = false;        // true while a bot turn is being generated/emitted
 let pendingEvent = null;    // last user event queued while busy (latest wins)
 
+// Which room Riley & Alex are currently in. They roam, and the server needs to
+// know where they are so user messages in that room reach them.
+let botRoom = 'main';
+function getBotRoom() { return botRoom; }
+function setBotRoom(roomId) { if (roomId) botRoom = roomId; }
+
 // Rolling conversation memory (shared room context for the bots)
 const HISTORY_LIMIT = 12;
 let conversation = [];      // [{ role: 'Riley'|'Alex'|username, text }]
@@ -112,9 +118,12 @@ function emitBotMessage(io, sender, text) {
     sender,
     text,
     role: 'bot',
+    // Tag the message with the room the bots are currently in. Without this the
+    // client cannot place the message and drops it in any non-main room.
+    room: botRoom,
     timestamp: new Date().toISOString()
   };
-  db.saveLog(sender, text, 'bot');
+  db.saveLog(sender, text, 'bot', botRoom);
   pushHistory(sender, text);
   io.emit('botStopTyping', {});
   io.emit('message', msg);
@@ -295,6 +304,8 @@ function delay(ms) {
 }
 
 module.exports = {
+  getBotRoom,
+  setBotRoom,
   handleUserMessage,
   startBotTimer,
   stopBotTimer,
