@@ -59,9 +59,15 @@ function setBotRoom(roomId) { if (roomId) botRoom = roomId; }
 function deAiPunctuation(text) {
   if (!text) return text;
   return String(text)
-    .replace(/\s*[—–]\s*/g, ', ')
+    // Every dash variant a model might emit, plus double hyphens and a hyphen
+    // used as a dash between spaces. All become a plain comma.
+    .replace(/\s*[\u2010-\u2015\u2212]\s*/g, ', ')
+    .replace(/\s+--+\s*/g, ', ')
+    .replace(/\s+-\s+/g, ', ')
+    // Tidy up whatever that produced
     .replace(/\s*,\s*,\s*/g, ', ')
-    .replace(/,\s*([.!?])/g, '$1')
+    .replace(/,\s*([.!?\u2026])/g, '$1')
+    .replace(/^[,\s]+/, '')
     .replace(/\s{2,}/g, ' ')
     .trim();
 }
