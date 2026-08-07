@@ -22,6 +22,15 @@ const DEFAULT_GROUPS = [
     filterSensitive: false,  // freer by default
     system: true,
   },
+  // ── Themed groups ──
+  // Each has its own dedicated cast of fake humans and its own topic pool, so
+  // they never collide with the general-chat personas.
+  { id: 'mystic',    name: 'מיסטיקה',      nameEn: 'Mysticism', emoji: '🔮', lang: 'he', theme: 'mystic', filterSensitive: true,  system: true },
+  { id: 'aliens',    name: 'חייזרים',      nameEn: 'Aliens',    emoji: '👽', lang: 'he', theme: 'aliens', filterSensitive: true,  system: true },
+  { id: 'code',      name: 'תכנות וקוד',   nameEn: 'Code',      emoji: '💻', lang: 'he', theme: 'code',   filterSensitive: true,  system: true },
+  { id: 'mystic_en', name: 'מיסטיקה (EN)', nameEn: 'Mysticism', emoji: '🔮', lang: 'en', theme: 'mystic', filterSensitive: false, system: true },
+  { id: 'aliens_en', name: 'חייזרים (EN)', nameEn: 'Aliens',    emoji: '👽', lang: 'en', theme: 'aliens', filterSensitive: false, system: true },
+  { id: 'code_en',   name: 'תכנות (EN)',   nameEn: 'Code',      emoji: '💻', lang: 'en', theme: 'code',   filterSensitive: false, system: true },
 ];
 
 const DEFAULT_ROOMS = [
@@ -35,6 +44,13 @@ const DEFAULT_ROOMS = [
   { id: 'intl_main',  name: 'ראשי (אנגלית)', nameEn: 'Main Hall', emoji: '🌐', group: 'intl', system: true },
   { id: 'intl_chat',  name: 'צ׳אט חופשי',    nameEn: 'Free Chat', emoji: '💬', group: 'intl', system: false },
   { id: 'intl_games', name: 'משחקים (אנגלית)', nameEn: 'Gaming',  emoji: '🎮', group: 'intl', system: false },
+  // ── Themed rooms (one per themed group) ──
+  { id: 'mystic_main',    name: 'מיסטיקה',    nameEn: 'Mysticism', emoji: '🔮', group: 'mystic',    system: true },
+  { id: 'aliens_main',    name: 'חייזרים',    nameEn: 'Aliens',    emoji: '👽', group: 'aliens',    system: true },
+  { id: 'code_main',      name: 'תכנות וקוד', nameEn: 'Code',      emoji: '💻', group: 'code',      system: true },
+  { id: 'mystic_en_main', name: 'Mysticism',  nameEn: 'Mysticism', emoji: '🔮', group: 'mystic_en', system: true },
+  { id: 'aliens_en_main', name: 'Aliens',     nameEn: 'Aliens',    emoji: '👽', group: 'aliens_en', system: true },
+  { id: 'code_en_main',   name: 'Code',       nameEn: 'Code',      emoji: '💻', group: 'code_en',   system: true },
 ];
 
 let groups = JSON.parse(JSON.stringify(DEFAULT_GROUPS));
@@ -66,6 +82,14 @@ function isFilterEnabledForRoom(roomId) {
   if (!room) return false;
   const g = groups.find(x => x.id === room.group);
   return g ? !!g.filterSensitive : false;
+}
+
+// Which theme (if any) a room belongs to: 'mystic' | 'aliens' | 'code' | null
+function getRoomTheme(roomId) {
+  const room = rooms.find(r => r.id === roomId);
+  if (!room) return null;
+  const g = groups.find(x => x.id === room.group);
+  return g && g.theme ? g.theme : null;
 }
 
 function getGroupLang(groupId) {
@@ -126,7 +150,7 @@ const INTL_MAIN_ROOM = 'intl_main';
 
 module.exports = {
   // groups
-  getGroups, getGroup, groupExists, setGroupFilter,
+  getGroups, getGroup, groupExists, setGroupFilter, getRoomTheme,
   isFilterEnabledForRoom, getGroupLang, getRoomGroup, getDefaultRoomForGroup,
   // rooms
   getRooms, getRoom, addRoom, removeRoom, roomExists,
