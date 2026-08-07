@@ -64,7 +64,10 @@ const SYSTEM_BASE = `אתה משתתף בצ׳אט ציבורי בשם Chatlly. �
 - אל תשתמש בשם שלך בתחילת ההודעה.
 - שיחה אמיתית זזה קדימה, כל הודעה צריכה להוסיף משהו חדש ולא לחזור על מה שכבר נאמר.
 - אסור בהחלט להשתמש בקו מפריד ארוך (—). אנשים אמיתיים לא מקלידים אותו בצ׳אט. השתמש בפסיק, בנקודה או בשתי נקודות במקום.
-- כתוב כמו בהודעת וואטסאפ: פשוט, קצר, בלי סימני פיסוק מתוחכמים.`;
+- כתוב כמו בהודעת וואטסאפ: פשוט, קצר, בלי סימני פיסוק מתוחכמים.
+- דבר בסלנג ישראלי יומיומי כמו בצ׳אט אמיתי. מותר וכדאי: אחי, גבר, מאמי, וואלה, סבבה, תכלס, אין מצב, יאללה, חחח, אשכרה, בקטע, על הפנים.
+- אל תכתוב עברית ספרותית או מנוסחת. תכתוב איך שמדברים, כולל שגיאות קטנות וקיצורים.
+- אל תסביר ואל תנתח יותר מדי. תגיב קצר, עם תחושה, כמו שאדם זורק משפט לחדר.`;
 
 // ══════════════════════════════════════════════════════════════
 // ENGLISH SET — mirrors the Hebrew set exactly.
@@ -104,7 +107,138 @@ Critical rules to sound real:
 - Do not put your own name at the start of the message.
 - A real conversation moves forward, every message should add something new rather than repeating what was said.
 - NEVER use an em-dash (—). Real people do not type that in chat. Use a comma, a period, or just start a new thought.
-- Write like a text message: simple, short, no fancy punctuation.`;
+- Write like a text message: simple, short, no fancy punctuation.
+- Use everyday casual chat slang: bro, mate, honestly, lol, ngl, tbh, no way, damn, fr.
+- Do not write polished or formal English. Write the way people actually type, contractions and all.
+- Do not over-explain or analyse. React short and with feeling, like tossing a line into a room.`;
+
+
+// ══════════════════════════════════════════════════════════════
+// THEMED CASTS
+// Each themed group gets its own personas, its own topics and its own
+// conversation hooks. Separate names mean they can never collide with the
+// general-chat cast above, and the surrounding engine is untouched.
+// ══════════════════════════════════════════════════════════════
+const THEME_CASTS = {
+  mystic: {
+    he: [
+      { name: 'tarot_lina', aliases: ['לינה', 'lina'], personality: 'בחורה בת 29 שקוראת בקלפי טארוט כבר 10 שנים. מדברת רגוע ובביטחון, מספרת מקרים מהקריאות שלה.' },
+      { name: 'zohar_88',   aliases: ['זוהר', 'zohar'], personality: 'בחור בן 34 שמתעסק בקבלה ובגימטריה. מביא חישובים ופרשנויות, קצת מסתורי.' },
+      { name: 'mayaa_moon', aliases: ['מאיה', 'maya'], personality: 'בחורה בת 26 שמאמינה באסטרולוגיה ובירח. תמיד מקשרת דברים למזלות ולמרקורי ברטרוגרד.', steerer: true },
+      { name: 'eitan_skeptic', aliases: ['איתן', 'eitan'], personality: 'בחור בן 31 ספקן שאוהב את הנושא אבל תמיד שואל שאלות קשות ומחפש הסבר הגיוני.', contrarian: true },
+      { name: 'shir_dreams', aliases: ['שיר', 'shir'], personality: 'בחורה בת 24 שמתעדת חלומות ומאמינה בחלומות צלולים ובדז׳ה וו.' },
+      { name: 'ravid_energy', aliases: ['רביד', 'ravid'], personality: 'בחור בן 28 שעוסק באנרגיות, ריקי ואבנים. חם ואופטימי.' },
+    ],
+    en: [
+      { name: 'tarot_lena',  aliases: ['lena'],  personality: 'A 29-year-old woman who has read tarot for 10 years. Calm and confident, shares stories from her readings.' },
+      { name: 'zohar_88',    aliases: ['zohar'], personality: 'A 34-year-old man into kabbalah and numerology. Brings calculations and interpretations, slightly mysterious.' },
+      { name: 'luna_moon',   aliases: ['luna'],  personality: 'A 26-year-old woman into astrology and moon cycles. Always ties things back to signs and mercury retrograde.', steerer: true },
+      { name: 'ethan_skeptic', aliases: ['ethan'], personality: 'A 31-year-old sceptic who loves the topic but always asks hard questions and looks for a rational explanation.', contrarian: true },
+      { name: 'sky_dreams',  aliases: ['sky'],   personality: 'A 24-year-old woman who journals dreams and believes in lucid dreaming and deja vu.' },
+      { name: 'raven_energy', aliases: ['raven'], personality: 'A 28-year-old into energy work, reiki and crystals. Warm and optimistic.' },
+    ],
+    topicsHe: [
+      'קריאת טארוט שהתגשמה בצורה מטרידה', 'מרקורי ברטרוגרד והבלגן שהוא עושה', 'חלום צלול שהרגיש אמיתי מדי',
+      'דז׳ה וו חזק שקרה לכם', 'גימטריה של שם ומה היא מגלה', 'אבנים ואנרגיות, עובד או פלצבו',
+      'תחושת בטן שהצילה מישהו', 'בית שמרגיש בו משהו מוזר', 'מדיטציה שהוציאה משהו לא צפוי',
+      'מפת לידה ואיך היא מסבירה אופי', 'מספרים שחוזרים כל הזמן', 'קורא מחשבות או ניחוש טוב',
+    ],
+    topicsEn: [
+      'a tarot reading that came true in an unsettling way', 'mercury retrograde and the chaos it brings',
+      'a lucid dream that felt too real', 'a strong deja vu moment', 'what your name adds up to in numerology',
+      'crystals and energy work, real or placebo', 'a gut feeling that saved someone',
+      'a house that just feels off', 'a meditation that surfaced something unexpected',
+      'birth charts and how well they describe people', 'numbers that keep repeating', 'mind reading or good guessing',
+    ],
+  },
+
+  aliens: {
+    he: [
+      { name: 'ufo_amir',   aliases: ['אמיר', 'amir'], personality: 'בחור בן 33 שעוקב אחרי דיווחי עב״מים שנים. מביא מקרים מתועדים ותאריכים.' },
+      { name: 'noga_stars', aliases: ['נגה', 'noga'], personality: 'בחורה בת 27 שמתעניינת באסטרוביולוגיה ובחיים אפשריים בכוכבים אחרים. מדעית אבל פתוחה.' },
+      { name: 'guy_area51', aliases: ['גיא', 'guy'], personality: 'בחור בן 30 שאוהב תיאוריות קונספירציה על ממשלות והסתרות. נלהב וצבעוני.', steerer: true },
+      { name: 'dana_logic', aliases: ['דנה', 'dana'], personality: 'בחורה בת 29 שמפרקת כל סיפור עב״ם להסבר הגיוני. עוקצנית אבל בכיף.', contrarian: true },
+      { name: 'oren_sky',   aliases: ['אורן', 'oren'], personality: 'בחור בן 25 שצופה בשמיים עם טלסקופ ומצלם. מדבר על מה שהוא ראה בעצמו.' },
+      { name: 'tal_signal', aliases: ['טל', 'tal'], personality: 'בחורה בת 31 שמתעניינת באות Wow ובחיפוש אחר אותות מהחלל.' },
+    ],
+    en: [
+      { name: 'ufo_adam',   aliases: ['adam'], personality: 'A 33-year-old who has followed UFO reports for years. Brings documented cases and dates.' },
+      { name: 'nova_stars', aliases: ['nova'], personality: 'A 27-year-old into astrobiology and possible life on other worlds. Scientific but open-minded.' },
+      { name: 'guy_area51', aliases: ['guy'],  personality: 'A 30-year-old who loves government cover-up theories. Enthusiastic and colourful.', steerer: true },
+      { name: 'dana_logic', aliases: ['dana'], personality: 'A 29-year-old who takes apart every UFO story looking for the rational explanation. Sharp but friendly.', contrarian: true },
+      { name: 'orion_sky',  aliases: ['orion'], personality: 'A 25-year-old amateur astronomer who photographs the sky and talks about what he saw himself.' },
+      { name: 'tal_signal', aliases: ['tal'],  personality: 'A 31-year-old fascinated by the Wow! signal and the search for messages from space.' },
+    ],
+    topicsHe: [
+      'הדיווחים של טייסי חיל האוויר האמריקאי', 'אות Wow ומה הוא באמת היה', 'פרדוקס פרמי, איפה כולם',
+      'אורות מוזרים בשמיים שראיתם', 'האם היינו מזהים חיים שונים לגמרי מאיתנו', 'מה קרה ברוזוול באמת',
+      'ירחים במערכת השמש שאולי יש בהם חיים', 'טלסקופ ג׳יימס ווב ומה הוא גילה', 'האם כדאי לנו בכלל לשדר לחלל',
+      'סרטונים של עב״מים שאי אפשר להסביר', 'איך נראה יצור מכוכב עם כבידה כפולה', 'חטיפות מדווחות והפסיכולוגיה מאחוריהן',
+    ],
+    topicsEn: [
+      'the US navy pilot UFO footage', 'the Wow! signal and what it actually was', 'the Fermi paradox, where is everyone',
+      'strange lights people have seen', 'whether we would even recognise truly alien life', 'what really happened at Roswell',
+      'moons in our solar system that might host life', 'what the James Webb telescope found',
+      'whether we should be broadcasting into space', 'UFO videos nobody can explain',
+      'what life on a high-gravity planet would look like', 'abduction reports and the psychology behind them',
+    ],
+  },
+
+  code: {
+    he: [
+      { name: 'dev_yonatan', aliases: ['יונתן', 'yoni'], personality: 'מפתח בק־אנד בן 30, עובד עם Node ו־Postgres. מעשי, אוהב לפתור בעיות.' },
+      { name: 'react_shani', aliases: ['שני', 'shani'], personality: 'מפתחת פרונט בת 27, חיה על React ו־CSS. יש לה דעות חזקות על עיצוב.' },
+      { name: 'ops_barak',  aliases: ['ברק', 'barak'], personality: 'איש DevOps בן 35, דוקר וקוברנטיס. מספר סיפורי אימה מפרודקשן.', steerer: true },
+      { name: 'py_hila',    aliases: ['הילה', 'hila'], personality: 'מתכנתת פייתון בת 26, דאטה ו־ML. תמיד מציעה גישה אחרת לפתרון.', contrarian: true },
+      { name: 'junior_omri', aliases: ['עמרי', 'omri'], personality: 'ג׳וניור בן 23 שלומד תוך כדי. שואל שאלות טובות ומתלהב מכל דבר חדש.' },
+      { name: 'arch_liron', aliases: ['לירון', 'liron'], personality: 'ארכיטקט תוכנה בן 38. חושב על מערכות בגדול ומזהיר מחובות טכניים.' },
+    ],
+    en: [
+      { name: 'dev_jonah',  aliases: ['jonah'], personality: 'A 30-year-old backend developer working with Node and Postgres. Practical, loves solving problems.' },
+      { name: 'react_shay', aliases: ['shay'],  personality: 'A 27-year-old frontend developer who lives in React and CSS. Strong opinions about design.' },
+      { name: 'ops_barak',  aliases: ['barak'], personality: 'A 35-year-old DevOps engineer, docker and kubernetes. Tells production horror stories.', steerer: true },
+      { name: 'py_hila',    aliases: ['hila'],  personality: 'A 26-year-old Python developer doing data and ML. Always suggests a different approach.', contrarian: true },
+      { name: 'junior_omri', aliases: ['omri'], personality: 'A 23-year-old junior learning on the job. Asks good questions and gets excited about everything new.' },
+      { name: 'arch_liron', aliases: ['liron'], personality: 'A 38-year-old software architect. Thinks in systems and warns about technical debt.' },
+    ],
+    topicsHe: [
+      'באג שלקח ימים למצוא והתברר כשטות', 'האם AI באמת מחליף מתכנתים', 'הקוד הכי גרוע שראיתם בפרודקשן',
+      'מונורפו מול מיקרו־שירותים', 'כמה בדיקות זה יותר מדי בדיקות', 'עורך קוד ומקלדת, מלחמות קודש',
+      'דיפלוי שהפיל את הכל בשישי בערב', 'קוד לגאסי שאף אחד לא מעז לגעת בו', 'ראיונות עבודה בהייטק והשאלות המוזרות',
+      'טיפוסים סטטיים מול דינמיים', 'איך באמת לומדים טכנולוגיה חדשה', 'קוד ריוויו שהרס מערכת יחסים בצוות',
+    ],
+    topicsEn: [
+      'a bug that took days and turned out to be trivial', 'whether AI actually replaces developers',
+      'the worst code you have seen in production', 'monorepo versus microservices',
+      'how much testing is too much testing', 'editor and keyboard holy wars',
+      'a friday deploy that took everything down', 'legacy code nobody dares to touch',
+      'tech interviews and their strangest questions', 'static versus dynamic typing',
+      'how you actually learn a new technology', 'a code review that ruined a team friendship',
+    ],
+  },
+};
+
+// Resolve the cast/topics for the room the fakes currently live in.
+// A short focus line so a themed room stays on its subject without the bots
+// turning into an encyclopedia. Empty string for the general rooms.
+function themeFocus() {
+  const theme = themeOfRoom();
+  if (!theme) return '';
+  const EN = fakeLang() === 'en';
+  const labelHe = { mystic: 'מיסטיקה, טארוט, אסטרולוגיה, חלומות ותופעות לא מוסברות',
+                    aliens: 'חייזרים, עב״מים, חלל וחיים מחוץ לכדור הארץ',
+                    code:   'תכנות, קוד, טכנולוגיה וחיי מפתחים' }[theme];
+  const labelEn = { mystic: 'mysticism, tarot, astrology, dreams and unexplained phenomena',
+                    aliens: 'aliens, UFOs, space and life beyond earth',
+                    code:   'programming, code, technology and developer life' }[theme];
+  return EN
+    ? `\n\nThis room is dedicated to ${labelEn}. Keep the conversation on that world, but talk about it like a real person swapping stories and opinions, not like an article. Share personal experiences, ask others what they think, disagree sometimes.`
+    : `\n\nהחדר הזה מוקדש ל${labelHe}. תישאר בעולם הזה, אבל דבר עליו כמו אדם אמיתי שמחליף סיפורים ודעות, לא כמו כתבה. ספר חוויות אישיות, תשאל אחרים מה הם חושבים, ולפעמים תתווכח.`;
+}
+
+function themeOfRoom() {
+  try { return roomsModule.getRoomTheme(fakeRoom); } catch { return null; }
+}
 
 // Which language should the fakes speak? Derived from the group of their room.
 function fakeLang() {
@@ -117,8 +251,21 @@ function fakeLang() {
 }
 
 // Language-aware accessors — Hebrew values are the originals, untouched.
-function personaSet()   { return fakeLang() === 'en' ? PERSONAS_EN : PERSONAS; }
-function topicSet()     { return fakeLang() === 'en' ? NEW_TOPICS_EN : NEW_TOPICS; }
+function personaSet() {
+  const theme = themeOfRoom();
+  if (theme && THEME_CASTS[theme]) {
+    return fakeLang() === 'en' ? THEME_CASTS[theme].en : THEME_CASTS[theme].he;
+  }
+  return fakeLang() === 'en' ? PERSONAS_EN : PERSONAS;
+}
+
+function topicSet() {
+  const theme = themeOfRoom();
+  if (theme && THEME_CASTS[theme]) {
+    return fakeLang() === 'en' ? THEME_CASTS[theme].topicsEn : THEME_CASTS[theme].topicsHe;
+  }
+  return fakeLang() === 'en' ? NEW_TOPICS_EN : NEW_TOPICS;
+}
 function openerSet()    { return fakeLang() === 'en' ? BANNED_OPENERS_EN : BANNED_OPENERS; }
 function systemBase()   { return fakeLang() === 'en' ? SYSTEM_BASE_EN : SYSTEM_BASE; }
 
@@ -129,7 +276,11 @@ let directorTimer = null;
 let directorRunning = false;
 let lastSpeaker = null;
 let topicMessageCount = 0;   // how many messages since last topic change
-let turnsSinceSteer = 99;    // cooldown: turns since a steerer last changed the subject
+let turnsSinceSteer = 99;
+let topicStartedAt = Date.now();
+let pendingAddress = null;   // who was called by name, and what they were asked
+const TOPIC_MAX_MS = 120000;   // 2 minutes on one subject is plenty
+function topicIsStale() { return Date.now() - topicStartedAt > TOPIC_MAX_MS; }    // cooldown: turns since a steerer last changed the subject
 let fakeRoom = 'main';       // which room the fakes live in
 let userSpokeDuringTurn = false;
 let spokenEver = new Set();   // every fake that has spoken this session (never trimmed)
@@ -239,8 +390,20 @@ function pickNextSpeaker() {
   if (addressedBot) {
     const recent = roomHistory.slice(-RECENT_WINDOW).map(m => m.sender);
     if (recent.filter(n => n === addressedBot.name).length < MAX_SHARE_IN_WINDOW) {
+      // Remember WHY this bot was chosen and WHAT it must answer, so the reply
+      // step cannot lose that context if another message lands meanwhile.
+      pendingAddress = { name: addressedBot.name, by: lastMsg.sender, text: lastMsg.text };
       return addressedBot;
     }
+  }
+  pendingAddress = null;
+
+  // Case A2: the subject has run its course. Steering outranks everything below
+  // so a conversation can never grind on the same topic for minutes. Only a
+  // direct address (Case A) beats it.
+  if ((topicMessageCount >= 5 || isTopicStuck() || topicIsStale()) && turnsSinceSteer >= 3) {
+    const steerers = activeFakes.filter(f => f.persona.steerer && f.name !== lastSpeaker);
+    if (steerers.length) return steerers[Math.floor(Math.random() * steerers.length)];
   }
 
   // Case B: a REAL USER just spoke without naming anyone. ~60% of the time a bot
@@ -270,11 +433,6 @@ function pickNextSpeaker() {
   const pool = activeFakes.filter(f => f.name !== lastSpeaker);
   const speakers = quietestFirst(notHogging(pool.length ? pool : activeFakes));
 
-  // Case E: if truly stuck and not recently steered, a steerer moves things along
-  if ((topicMessageCount >= 9 || isTopicStuck()) && turnsSinceSteer >= 6) {
-    const steerer = speakers.find(f => f.persona.steerer);
-    if (steerer) return steerer;
-  }
 
   // Bias toward the quieter half of the room so turns rotate
   const half = Math.max(1, Math.ceil(speakers.length / 2));
@@ -296,12 +454,10 @@ async function generateReply(fake, mode) {
     } else {
       const lastMsg = roomHistory[roomHistory.length - 1];
       const lastSender = lastMsg ? lastMsg.sender : '';
-      const iWasAddressed = lastMsg && (() => {
-        const lower = lastMsg.text.toLowerCase();
-        const first = fake.name.toLowerCase().replace(/[_.].*$/, '');
-        const aliases = (fake.persona.aliases || []).map(a => a.toLowerCase());
-        return [first, ...aliases].some(n => n.length >= 2 && lower.includes(n));
-      })();
+      // Was THIS bot the one called by name? Use the director's decision so a
+      // newer message can't erase the fact that the user asked them directly.
+      const addressedMe = pendingAddress && pendingAddress.name === fake.name ? pendingAddress : null;
+      const wasAddressed = !!addressedMe;
 
       const lastWasRealUser = lastMsg && !isFakeName(lastSender) && lastSender !== 'Riley' && lastSender !== 'Alex';
 
@@ -312,11 +468,13 @@ async function generateReply(fake, mode) {
         instruction = EN
           ? `Start a real conversation — share something about yourself or ask an interesting question about ${topic}. Do not say "hi" or "what's up". One sentence.`
           : `פתח שיחה אמיתית — ספר משהו על עצמך או שאל שאלה מעניינת שקשורה ל${topic}. אל תגיד "היי" או "מה קורה". משפט אחד.`;
-      } else if (iWasAddressed) {
-        // Someone spoke to ME — respond naturally in first person to what they SAID
+      } else if (wasAddressed) {
+        // Someone called this bot by name. Answer THEM, about what THEY said.
+        const who = addressedMe.by;
+        const what = addressedMe.text;
         instruction = EN
-          ? `${lastSender} just spoke to you. Reply naturally and directly in first person, like a real conversation — respond to what they actually said (if they recommended something, react to the recommendation; if they asked you something, answer it). Never refer to yourself in third person. One short sentence.`
-          : `${lastSender} דיבר אליך עכשיו. ענה לו באופן טבעי וישיר בגוף ראשון, כמו בשיחה אמיתית — התייחס לתוכן של מה שהוא אמר (אם המליץ לך על משהו, תגיב להמלצה; אם שאל אותך, תענה). אל תדבר על עצמך בגוף שלישי. משפט אחד קצר.`;
+          ? `${who} just said to you directly: "${what}". You MUST answer them about exactly that. Reply in first person, like a real person being spoken to. Do not change the subject, do not carry on with what you were saying before, do not talk about yourself in third person. If it was a question, answer it. If it was a jab, react to it. One short sentence.`
+          : `${who} פנה אליך עכשיו ואמר: "${what}". אתה חייב לענות לו בדיוק על זה. תענה בגוף ראשון, כמו אדם אמיתי שפונים אליו. אל תשנה נושא, אל תמשיך במה שדיברת עליו קודם, ואל תדבר על עצמך בגוף שלישי. אם זו שאלה, תענה עליה. אם זו עקיצה, תגיב לה. משפט אחד קצר.`;
       } else if (lastWasRealUser) {
         // A real person is in the chat — engage THEM directly and warmly
         instruction = EN
@@ -330,7 +488,7 @@ async function generateReply(fake, mode) {
       }
 
       // Steerer changes subject only when truly stuck AND not recently steered
-      if (fake.persona.steerer && (topicMessageCount >= 9 || isTopicStuck()) && turnsSinceSteer >= 6 && !iWasAddressed) {
+      if (fake.persona.steerer && (topicMessageCount >= 5 || isTopicStuck() || topicIsStale()) && turnsSinceSteer >= 3 && !wasAddressed) {
         const _topics = topicSet();
         const topic = _topics[Math.floor(Math.random() * _topics.length)];
         instruction = EN
@@ -338,9 +496,10 @@ async function generateReply(fake, mode) {
           : `השיחה נתקעה וחוזרת על עצמה. עצור את הנושא הנוכחי לגמרי ותפתח משהו חדש ולא קשור — ${topic}. שאל שאלה ישירה או ספר חוויה אישית קצרה. אל תזכיר את הנושא הקודם. משפט אחד.`;
         topicMessageCount = 0;
         turnsSinceSteer = 0;
+        topicStartedAt = Date.now();
       }
       // Contrarian sometimes disagrees (but not if directly addressed)
-      else if (fake.persona.contrarian && Math.random() < 0.35 && !iWasAddressed) {
+      else if (fake.persona.contrarian && Math.random() < 0.35 && !wasAddressed) {
         instruction = EN
           ? `React, but do not agree with what was said — take a different side or a genuinely different opinion, in a friendly way. Do not start with "Exactly" or "Totally". One short sentence.`
           : `הגב אבל אל תסכים עם מה שנאמר — קח צד שונה או דעה אחרת לגמרי, בצורה חברותית. אל תתחיל ב"בדיוק" או "לגמרי". משפט אחד קצר.`;
@@ -354,8 +513,8 @@ async function generateReply(fake, mode) {
       thinking: { type: 'disabled' },
       messages: [
         { role: 'system', content: fakeLang() === 'en'
-            ? `${SYSTEM_BASE_EN}\n\nYour persona: ${fake.persona.personality}`
-            : `${SYSTEM_BASE}\n\nהאישיות שלך: ${fake.persona.personality}` },
+            ? `${SYSTEM_BASE_EN}\n\nYour persona: ${fake.persona.personality}${themeFocus()}`
+            : `${SYSTEM_BASE}\n\nהאישיות שלך: ${fake.persona.personality}${themeFocus()}` },
         { role: 'user', content: EN ? `Chat history:\n${transcript}\n\n${instruction}` : `היסטוריית הצ׳אט:\n${transcript}\n\n${instruction}` }
       ]
     }), API_TIMEOUT_MS);
@@ -374,10 +533,16 @@ async function generateReply(fake, mode) {
 // Replace any that slip past the prompt with natural chat punctuation.
 function deAiPunctuation(text) {
   if (!text) return text;
-  return text
-    .replace(/\s*[—–]\s*/g, ', ')   // em/en dash -> comma
-    .replace(/\s*,\s*,\s*/g, ', ')  // collapse doubles
-    .replace(/,\s*([.!?])/g, '$1')   // ", ." -> "."
+  return String(text)
+    // Every dash variant a model might emit, plus double hyphens and a hyphen
+    // used as a dash between spaces. All become a plain comma.
+    .replace(/\s*[\u2010-\u2015\u2212]\s*/g, ', ')
+    .replace(/\s+--+\s*/g, ', ')
+    .replace(/\s+-\s+/g, ', ')
+    // Tidy up whatever that produced
+    .replace(/\s*,\s*,\s*/g, ', ')
+    .replace(/,\s*([.!?\u2026])/g, '$1')
+    .replace(/^[,\s]+/, '')
     .replace(/\s{2,}/g, ' ')
     .trim();
 }
