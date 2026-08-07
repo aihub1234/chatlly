@@ -6,6 +6,7 @@ import UserList from '../components/UserList'
 import UserContextMenu from '../components/UserContextMenu'
 import BotStatus from '../components/BotStatus'
 import { detectLang, t } from '../legal'
+import ShareModal from '../components/ShareModal'
 
 const EMOJI_LIST = [
   '😊','😂','🤣','😍','😘','😉','😎','🥰','😅','🙃',
@@ -32,6 +33,7 @@ export default function ChatRoom({ user: initialUser, token, onLogout, onUpdateU
   const [roomCounts, setRoomCounts] = useState({})
   const [groups, setGroups] = useState([])
   const [accessLevel, setAccessLevel] = useState('full')
+  const [showShare, setShowShare] = useState(false)
   const [currentRoom, setCurrentRoom] = useState('main')
   const [showRooms, setShowRooms] = useState(false)
   // Private chats: { room, with, messages: [] }
@@ -361,6 +363,13 @@ export default function ChatRoom({ user: initialUser, token, onLogout, onUpdateU
           >
             👥 {users.length}
           </button>
+          <button
+            className="share-btn"
+            onClick={() => setShowShare(true)}
+            title={L.share}
+          >
+            📤
+          </button>
           <label className="private-toggle" title="פתוח לצ'אט פרטי" onClick={e => e.stopPropagation()}>
             <input
               type="checkbox"
@@ -539,6 +548,14 @@ export default function ChatRoom({ user: initialUser, token, onLogout, onUpdateU
           {L.send}
         </button>
       </form>
+
+      <ShareModal
+        open={showShare}
+        onClose={() => setShowShare(false)}
+        lang={lang}
+        messages={messages}
+        roomName={currentRoomInfo.emoji + ' ' + currentRoomInfo.name}
+      />
 
       {/* ── Context menu ── */}
       {contextMenu && (
